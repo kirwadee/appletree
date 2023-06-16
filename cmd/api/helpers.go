@@ -1,6 +1,7 @@
 package main
 
 import (
+	"encoding/json"
 	"errors"
 	"net/http"
 	"strconv"
@@ -18,4 +19,27 @@ func (app *application) readIDParam(r *http.Request) (int64, error) {
 		return 0, errors.New("invalid id parameter")
 	}
 	return id, nil
+}
+
+// writeJSON method converts data passed to it to JSON response
+func (app *application) writeJSON(w http.ResponseWriter, status int, data any, headers http.Header) error {
+	jsData, err := json.Marshal(data)
+	if err != nil {
+		return err
+	}
+	//add a new line to make viewing on the terminal easier
+	jsData = append(jsData, '\n')
+
+	//Add the headers while iterating bcoz its a map
+	for key, value := range headers {
+		w.Header()[key] = value
+	}
+	//specify that we will serve our response using JSON by setting that header
+	w.Header().Set("Content-Type", "application/json")
+	w.WriteHeader(status)
+	//write to w the jsonData which is slice of byte to output
+	w.Write(jsData)
+
+	return nil
+
 }
