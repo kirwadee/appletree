@@ -1,7 +1,6 @@
 package main
 
 import (
-	"encoding/json"
 	"fmt"
 	"net/http"
 	"time"
@@ -11,6 +10,7 @@ import (
 
 // createSchoolHandler for the POST "/v1/schools" endpoint
 func (app *application) createSchoolHandler(w http.ResponseWriter, r *http.Request) {
+	//client will create school as JSON object so it is upon the handler to convert it back to raw data
 	//our target decode destination
 	var input struct {
 		Name    string   `json:"name"`
@@ -24,9 +24,9 @@ func (app *application) createSchoolHandler(w http.ResponseWriter, r *http.Reque
 	}
 
 	//initialize a new json.Decoder instance
-	err := json.NewDecoder(r.Body).Decode(&input)
+	err := app.readJSON(w, r, &input)
 	if err != nil {
-		app.errorResponse(w, r, http.StatusBadRequest, err.Error())
+		app.badRequestResponse(w, r, err)
 		return
 	}
 	//Display the input
