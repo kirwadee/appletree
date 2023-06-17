@@ -9,6 +9,9 @@ import (
 	"github.com/julienschmidt/httprouter"
 )
 
+// create a new type named envelope to envelope certain JSON response of a certain object
+type envelope map[string]interface{}
+
 // readIDParam method reads id parameter passed in a request object
 func (app *application) readIDParam(r *http.Request) (int64, error) {
 	// use the "ParamsFromContext() function" to get the request context as a slice
@@ -22,7 +25,7 @@ func (app *application) readIDParam(r *http.Request) (int64, error) {
 }
 
 // writeJSON method converts data passed to it to JSON response
-func (app *application) writeJSON(w http.ResponseWriter, status int, data any, headers http.Header) error {
+func (app *application) writeJSON(w http.ResponseWriter, status int, data envelope, headers http.Header) error {
 	jsData, err := json.MarshalIndent(data, "", "\t")
 	if err != nil {
 		return err

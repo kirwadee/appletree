@@ -7,8 +7,12 @@ import (
 )
 
 func (app *application) routes() *httprouter.Router {
-	//create a new httprouter instance
+	//create a new httprouter instance ie router
 	router := httprouter.New()
+	//customize NotFound field in router struct
+	router.NotFound = http.HandlerFunc(app.notFoundResponse)
+	router.MethodNotAllowed = http.HandlerFunc(app.methodNotAllowedResponse)
+	//handlers
 	router.HandlerFunc(http.MethodGet, "/v1/healthcheck", app.healthcheckHandler)
 	router.HandlerFunc(http.MethodPost, "/v1/schools", app.createSchoolHandler)
 	router.HandlerFunc(http.MethodGet, "/v1/schools/:id", app.showSchoolHandler)
