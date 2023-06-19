@@ -28,7 +28,10 @@ type config struct {
 	port int
 	env  string //development, production, staging
 	db   struct {
-		dsn string
+		dsn          string
+		maxOpenConns int
+		maxIdleConns int
+		maxIdleTime  string
 	}
 }
 
@@ -47,6 +50,9 @@ func main() {
 	flag.IntVar(&cfg.port, "port", 4000, "API Server Port")
 	flag.StringVar(&cfg.env, "env", "development", "Environment(development | staging | production)")
 	flag.StringVar(&cfg.db.dsn, "db-dsn", psqlInfo, "Postgresql dsn")
+	flag.IntVar(&cfg.db.maxOpenConns, "db-max-open-conns", 25, "Postgresql max open conns")
+	flag.IntVar(&cfg.db.maxIdleConns, "db-max-idle-conns", 25, "Postgresql max idle conns")
+	flag.StringVar(&cfg.db.maxIdleTime, "db-max-idle-time", "15m", "Postgresql max connection idle time")
 	flag.Parse()
 
 	//Create a customized logger
@@ -57,8 +63,13 @@ func main() {
 	if err != nil {
 		logger.Fatal(err)
 	}
-	logger.Println("Connected to postgres db")
 	defer db.Close()
+	db.SetMaxOpenConns(cfg.db.maxOpenConns)
+	db.SetMaxIdleConns(cfg.db.maxIdleConns)
+	duration, _ := time.ParseDuration(cfg.db.maxIdleTime)
+
+	db.SetConnMaxIdleTime(duration)
+	logger.Println("Connected to postgres db")
 
 	//Create an instance of application struct
 	app := &application{
