@@ -6,6 +6,7 @@ import (
 	"time"
 
 	"github.com/kirwadee/appletree/internal/data"
+	"github.com/kirwadee/appletree/internal/validator"
 )
 
 // createSchoolHandler for the POST "/v1/schools" endpoint
@@ -27,6 +28,26 @@ func (app *application) createSchoolHandler(w http.ResponseWriter, r *http.Reque
 	err := app.readJSON(w, r, &input)
 	if err != nil {
 		app.badRequestResponse(w, r, err)
+		return
+	}
+
+	//copy the values from the input struct  to a new school struct
+	school := &data.School{
+		Name:    input.Name,
+		Level:   input.Level,
+		Contact: input.Contact,
+		Phone:   input.Phone,
+		Email:   input.Email,
+		Website: input.Website,
+		Address: input.Address,
+		Mode:    input.Mode,
+	}
+	//initialize a new validator instance
+	v := validator.New()
+	//check the map to see if there are any vakidation errors in Errors map
+
+	if data.ValidateSchool(v, school); !v.Valid() {
+		app.failedValidationResponse(w, r, v.Errors)
 		return
 	}
 	//Display the input
