@@ -1,9 +1,9 @@
 package main
 
 import (
+	"errors"
 	"fmt"
 	"net/http"
-	"time"
 
 	"github.com/kirwadee/appletree/internal/data"
 	"github.com/kirwadee/appletree/internal/validator"
@@ -74,20 +74,19 @@ func (app *application) showSchoolHandler(w http.ResponseWriter, r *http.Request
 		return
 	}
 
-	//create new instsnce of a school struct
-	//containing the id we extraced from our url and some sample data
-	school := data.School{
-		ID:        id,
-		CreatedAt: time.Now(),
-		Name:      "Apple Tree",
-		Level:     "High School",
-		Contact:   "Ann Njeri",
-		Phone:     "7488429939",
-		Address:   "15 Kirwa street",
-		Mode:      []string{"blended", "online"},
-		Version:   1,
+	//Fetch the specific school
+	school, err := app.models.Schools.Get(id)
+	//Handle errors
+	if err != nil {
+		switch {
+		case errors.Is(err, data.ErrorRecordNotFound):
+			app.notFoundResponse(w, r)
+		default:
+			app.serverErrorResponse(w, r, err)
+		}
+		return
 	}
-	//Display the school data in JSON format
+	//write the data returned by Get()
 	err = app.writeJSON(w, http.StatusOK, envelope{"school": school}, nil)
 	if err != nil {
 		app.serverErrorResponse(w, r, err)
