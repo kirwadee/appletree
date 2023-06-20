@@ -44,14 +44,26 @@ func (app *application) createSchoolHandler(w http.ResponseWriter, r *http.Reque
 	}
 	//initialize a new validator instance
 	v := validator.New()
-	//check the map to see if there are any vakidation errors in Errors map
+	//check the map to see if there are any validation errors in Errors map
 
 	if data.ValidateSchool(v, school); !v.Valid() {
 		app.failedValidationResponse(w, r, v.Errors)
 		return
 	}
-	//Display the input
-	fmt.Fprintf(w, "%+v\n", input)
+	//Insert into the database
+	err = app.models.Schools.Insert(school)
+	if err != nil {
+		app.serverErrorResponse(w, r, err)
+	}
+	//create location header for the newly created resource/School
+	headers := make(http.Header)
+	headers.Set("Location", fmt.Sprintf("/v1/schools/%d", school.ID))
+	//write the JSON response with 201 status code
+	//with the body being the school data and the header being the headers map
+	err = app.writeJSON(w, http.StatusCreated, envelope{"school": school}, headers)
+	if err != nil {
+		app.serverErrorResponse(w, r, err)
+	}
 }
 
 // showSchoolHandler for the GET "/v1/schools/:id" endpoint

@@ -10,17 +10,13 @@ import (
 	"os"
 	"time"
 
+	"github.com/kirwadee/appletree/internal/data"
 	_ "github.com/lib/pq"
 )
 
 // application version number
 const (
-	version  = "1.0.0"
-	host     = "localhost"
-	port     = 5432
-	user     = "appletree"
-	password = "$Appletree2022$"
-	dbname   = "appletree"
+	version = "1.0.0"
 )
 
 // The configuration settings
@@ -39,17 +35,15 @@ type config struct {
 type application struct {
 	config config
 	logger *log.Logger
+	models data.Models
 }
 
 func main() {
-	psqlInfo := fmt.Sprintf("host=%s port=%d user=%s "+
-		"password=%s dbname=%s sslmode=disable",
-		host, port, user, password, dbname)
 	var cfg config
 	//read in flags that are needed to populate config struct
 	flag.IntVar(&cfg.port, "port", 4000, "API Server Port")
 	flag.StringVar(&cfg.env, "env", "development", "Environment(development | staging | production)")
-	flag.StringVar(&cfg.db.dsn, "db-dsn", psqlInfo, "Postgresql dsn")
+	flag.StringVar(&cfg.db.dsn, "db-dsn", os.Getenv("APPLETREE_DB_DSN"), "Postgresql dsn")
 	flag.IntVar(&cfg.db.maxOpenConns, "db-max-open-conns", 25, "Postgresql max open conns")
 	flag.IntVar(&cfg.db.maxIdleConns, "db-max-idle-conns", 25, "Postgresql max idle conns")
 	flag.StringVar(&cfg.db.maxIdleTime, "db-max-idle-time", "15m", "Postgresql max connection idle time")
@@ -75,6 +69,7 @@ func main() {
 	app := &application{
 		config: cfg,
 		logger: logger,
+		models: data.NewModels(db),
 	}
 
 	//create our server ServeMux
