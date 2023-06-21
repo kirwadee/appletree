@@ -144,5 +144,31 @@ func (m SchoolModel) Update(school *School) error {
 
 // Delete() removes a specific school
 func (m SchoolModel) Delete(id int64) error {
+	//Ensure the id is valid first
+	if id < 1 {
+		return ErrorRecordNotFound
+	}
+	//create the delete query
+	query := `
+	DELETE FROM schools 
+	WHERE id = $1
+	`
+	//Execute the query without returning any row
+	result, err := m.DB.Exec(query, id)
+	if err != nil {
+		return err
+	}
+	//check how many rows were affected by delete operstion
+	//We call RowsAffected() method on the result type variable
+	rowsAffected, err := result.RowsAffected()
+	if err != nil {
+		return err
+	}
+
+	//check to see if no rows were affected
+	if rowsAffected == 0 {
+		return ErrorRecordNotFound
+	}
+
 	return nil
 }
