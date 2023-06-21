@@ -57,6 +57,7 @@ func (app *application) readJSON(w http.ResponseWriter, r *http.Request, dst any
 	r.Body = http.MaxBytesReader(w, r.Body, int64(maxBytes))
 	dec := json.NewDecoder(r.Body)
 	dec.DisallowUnknownFields()
+	//dst is a pointer ie memory address of dst variable to store read JSON
 	err := dec.Decode(dst)
 	//check for a bad request
 	if err != nil {
