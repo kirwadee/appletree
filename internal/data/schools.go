@@ -119,6 +119,7 @@ func (m SchoolModel) Get(id int64) (*School, error) {
 }
 
 // Update() allows us to edit/alter a specific school
+// Optimistic locking on version number
 func (m SchoolModel) Update(school *School) error {
 	query := `
 	UPDATE schools
@@ -126,6 +127,7 @@ func (m SchoolModel) Update(school *School) error {
 	    email=$5, website=$6, address=$7, mode=$8,
 		version=version + 1
 	WHERE id=$9 
+	AND version = $10
 	RETURNING version
 	`
 	args := []interface{}{
@@ -138,8 +140,19 @@ func (m SchoolModel) Update(school *School) error {
 		school.Address,
 		pq.Array(school.Mode),
 		school.ID,
+		school.Version,
 	}
-	return m.DB.QueryRow(query, args...).Scan(&school.Version)
+	//check for edit conflicts
+	err := m.DB.QueryRow(query, args...).Scan(&school.Version)
+	if err != nil {
+		switch {
+		case errors.Is(err, sql.ErrNoRows):
+			return ErrEditConflict
+		default:
+			return err
+		}
+	}
+	return nil
 }
 
 // Delete() removes a specific school
