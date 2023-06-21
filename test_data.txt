@@ -1,4 +1,4 @@
-BODY='{"name":"AppleTree", "level":"preschool", "contact":"Jane Smith", "phone":"501-607-1123", "email":"jsmith@xyz.edu.bz", "website":"http://xyz.edu.bz", "address":"17 Peach street", "mode":["online", "face-to-face"]}'
+BODY='{"name":"Apple tree", "level":"preschool", "contact":"Jane Smith", "phone":"501-607-1123", "email":"jsmith@xyz.edu.bz", "website":"http://xyz.edu.bz", "address":"17 Peach street", "mode":["online", "face-to-face"]}'
 
 BODY='{"name":"Veggie School", "level":"preschool", "contact":"Bob Smith", "phone":"501-615-1123", "email":"bsmith@xyz.edu.bz", "website":"http://veggie.edu.bz", "address":"17 Veggie street", "mode":["online", "face-to-face"]}'
 

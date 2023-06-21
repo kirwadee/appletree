@@ -95,7 +95,7 @@ func (app *application) showSchoolHandler(w http.ResponseWriter, r *http.Request
 }
 
 func (app *application) updateSchoolHandler(w http.ResponseWriter, r *http.Request) {
-	//This method does a complete replacement
+	//This method does a partial  replacement
 	//Get the id of the school that needs updating
 	id, err := app.readIDParam(r)
 	if err != nil {
@@ -115,14 +115,16 @@ func (app *application) updateSchoolHandler(w http.ResponseWriter, r *http.Reque
 		return
 	}
 	//create an input struct to hold data read in from the client request
+	//we update input struct to use pointers because pointers have default value of nil
+	//If a field remains nil then we know the client did not update it
 	var input struct {
-		Name    string   `json:"name"`
-		Level   string   `json:"level"`
-		Contact string   `json:"contact"`
-		Phone   string   `json:"phone"`
-		Email   string   `json:"email"`
-		Website string   `json:"website"`
-		Address string   `json:"address"`
+		Name    *string  `json:"name"`
+		Level   *string  `json:"level"`
+		Contact *string  `json:"contact"`
+		Phone   *string  `json:"phone"`
+		Email   *string  `json:"email"`
+		Website *string  `json:"website"`
+		Address *string  `json:"address"`
 		Mode    []string `json:"mode"`
 	}
 
@@ -132,16 +134,32 @@ func (app *application) updateSchoolHandler(w http.ResponseWriter, r *http.Reque
 		app.badRequestResponse(w, r, err)
 		return
 	}
-	//Copy/Update the fields/values in the school variable using the fields values
-	//in the input struct
-	school.Name = input.Name
-	school.Level = input.Level
-	school.Contact = input.Contact
-	school.Phone = input.Phone
-	school.Email = input.Email
-	school.Website = input.Website
-	school.Address = input.Address
-	school.Mode = input.Mode
+
+	//check for updates
+	if input.Name != nil {
+		school.Name = *input.Name
+	}
+	if input.Level != nil {
+		school.Level = *input.Level
+	}
+	if input.Contact != nil {
+		school.Contact = *input.Contact
+	}
+	if input.Phone != nil {
+		school.Phone = *input.Phone
+	}
+	if input.Email != nil {
+		school.Email = *input.Email
+	}
+	if input.Website != nil {
+		school.Website = *input.Website
+	}
+	if input.Address != nil {
+		school.Address = *input.Address
+	}
+	if input.Mode != nil {
+		school.Mode = input.Mode
+	}
 
 	//Perform validation on the updated school.If validation fails we send
 	//a 422- unprocessable entity response to the client
