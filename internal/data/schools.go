@@ -1,6 +1,7 @@
 package data
 
 import (
+	"context"
 	"database/sql"
 	"errors"
 	"time"
@@ -64,6 +65,11 @@ func (m SchoolModel) Insert(school *School) error {
 	VALUES ($1, $2, $3, $4 ,$5, $6, $7, $8)
 	RETURNING id, created_at, version
 	`
+	//create a context
+	ctx, cancel := context.WithTimeout(context.Background(), 3*time.Second)
+	//clean up to prevent memory leaks
+	defer cancel()
+	//Execute the query using QueryRowContext()
 	//collect the data fields into a slice
 	args := []interface{}{
 		school.Name, school.Level,
@@ -72,7 +78,7 @@ func (m SchoolModel) Insert(school *School) error {
 		school.Address, pq.Array(school.Mode),
 	}
 
-	return m.DB.QueryRow(query, args...).Scan(&school.ID, &school.CreatedAt, &school.Version)
+	return m.DB.QueryRowContext(ctx, query, args...).Scan(&school.ID, &school.CreatedAt, &school.Version)
 
 }
 
@@ -90,8 +96,12 @@ func (m SchoolModel) Get(id int64) (*School, error) {
 	`
 	//Declare a school variale to hold returned data
 	var school School
-	//Execute the query using QueryRow()
-	err := m.DB.QueryRow(query, id).Scan(
+	//create a context
+	ctx, cancel := context.WithTimeout(context.Background(), 3*time.Second)
+	//clean up to prevent memory leaks
+	defer cancel()
+	//Execute the query using QueryRowContext()
+	err := m.DB.QueryRowContext(ctx, query, id).Scan(
 		&school.ID,
 		&school.CreatedAt,
 		&school.Name,
@@ -130,6 +140,12 @@ func (m SchoolModel) Update(school *School) error {
 	AND version = $10
 	RETURNING version
 	`
+	//create a context
+	ctx, cancel := context.WithTimeout(context.Background(), 3*time.Second)
+	//clean up to prevent memory leaks
+	defer cancel()
+	//Execute the query using QueryRowContext()
+
 	args := []interface{}{
 		school.Name,
 		school.Level,
@@ -143,7 +159,7 @@ func (m SchoolModel) Update(school *School) error {
 		school.Version,
 	}
 	//check for edit conflicts
-	err := m.DB.QueryRow(query, args...).Scan(&school.Version)
+	err := m.DB.QueryRowContext(ctx, query, args...).Scan(&school.Version)
 	if err != nil {
 		switch {
 		case errors.Is(err, sql.ErrNoRows):
@@ -161,13 +177,18 @@ func (m SchoolModel) Delete(id int64) error {
 	if id < 1 {
 		return ErrorRecordNotFound
 	}
+	//create a context
+	ctx, cancel := context.WithTimeout(context.Background(), 3*time.Second)
+	//clean up to prevent memory leaks
+	defer cancel()
+	//Execute the query using QueryRowContext()
 	//create the delete query
 	query := `
 	DELETE FROM schools 
 	WHERE id = $1
 	`
 	//Execute the query without returning any row
-	result, err := m.DB.Exec(query, id)
+	result, err := m.DB.ExecContext(ctx, query, id)
 	if err != nil {
 		return err
 	}
