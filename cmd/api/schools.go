@@ -219,3 +219,37 @@ func (app *application) deleteSchoolHandler(w http.ResponseWriter, r *http.Reque
 	}
 
 }
+
+// The listSchoolHandler() allows the client to see a listing of schools
+// based on a certain criteria
+func (app *application) listSchoolsHandler(w http.ResponseWriter, r *http.Request) {
+	//create an input struct to hold our query parameters
+	var input struct {
+		Name  string
+		Level string
+		Mode  []string
+		data.Filters
+	}
+	//initialize a new validator v instance
+	v := validator.New()
+	//Get url values map
+	qs := r.URL.Query()
+	//use the helper methods to extract the values
+	input.Name = app.readString(qs, "name", "")
+	input.Level = app.readString(qs, "level", "")
+	input.Mode = app.readCSV(qs, "mode", []string{})
+	//Get the page info
+	input.Filters.Page = app.readInt(qs, "page", 1, v)
+	input.Filters.PageSize = app.readInt(qs, "page_size", 20, v)
+	//Get sort information
+	input.Filters.Sort = app.readString(qs, "sort", "id")
+	//specify the allowed sort values
+	input.Filters.SortList = []string{"id", "name", "level", "-d", "-name", "-level"}
+	//check for validation errors
+	if data.ValidateFilters(v, input.Filters); !v.Valid() {
+		app.failedValidationResponse(w, r, v.Errors)
+		return
+	}
+	//Results dump
+	fmt.Fprintf(w, "%+v\n", input)
+}
