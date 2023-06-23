@@ -8,7 +8,10 @@ import (
 // logError logs error to the console
 func (app *application) logError(r *http.Request, err error) {
 	//log to the console
-	app.logger.Println(err)
+	app.logger.PrintError(err, map[string]string{
+		"request_method": r.Method,
+		"request_url":    r.URL.String(),
+	})
 }
 
 // we want to send JSON formatted error to the client

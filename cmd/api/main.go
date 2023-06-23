@@ -11,6 +11,7 @@ import (
 	"time"
 
 	"github.com/kirwadee/appletree/internal/data"
+	"github.com/kirwadee/appletree/internal/jsonlog"
 	_ "github.com/lib/pq"
 )
 
@@ -34,7 +35,7 @@ type config struct {
 // Dependency Injection
 type application struct {
 	config config
-	logger *log.Logger
+	logger *jsonlog.Logger
 	models data.Models
 }
 
@@ -49,13 +50,13 @@ func main() {
 	flag.StringVar(&cfg.db.maxIdleTime, "db-max-idle-time", "15m", "Postgresql max connection idle time")
 	flag.Parse()
 
-	//Create a customized logger
-	logger := log.New(os.Stdout, "", log.Ldate|log.Ltime)
+	//Create a customized logger instance
+	logger := jsonlog.New(os.Stdout, jsonlog.LevelInfo)
 
 	//create a connection pool
 	db, err := openDB(cfg)
 	if err != nil {
-		logger.Fatal(err)
+		logger.PrintFatal(err, nil)
 	}
 	defer db.Close()
 	db.SetMaxOpenConns(cfg.db.maxOpenConns)
@@ -63,7 +64,7 @@ func main() {
 	duration, _ := time.ParseDuration(cfg.db.maxIdleTime)
 
 	db.SetConnMaxIdleTime(duration)
-	logger.Println("Connected to postgres db")
+	logger.PrintInfo("Connected to postgres db", nil)
 
 	//Create an instance of application struct
 	app := &application{
@@ -80,14 +81,18 @@ func main() {
 	srv := &http.Server{
 		Addr:         fmt.Sprintf(":%d", cfg.port),
 		Handler:      app.routes(),
+		ErrorLog:     log.New(logger, "", 0),
 		IdleTimeout:  time.Minute,
 		ReadTimeout:  10 * time.Second,
 		WriteTimeout: 30 * time.Second,
 	}
 	//start our server
-	logger.Printf("Starting %s server on %s", cfg.env, srv.Addr)
+	logger.PrintInfo("Starting server", map[string]string{
+		"addr": srv.Addr,
+		"env":  cfg.env,
+	})
 	err = srv.ListenAndServe()
-	logger.Fatal(err)
+	logger.PrintFatal(err, nil)
 }
 
 // The openDB() returns pointer to *sql.DB connection pool
