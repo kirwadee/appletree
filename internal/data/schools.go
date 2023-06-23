@@ -213,8 +213,8 @@ func (m SchoolModel) GetAll(name, level string, mode []string, filters Filters) 
 	query := `
 	 SELECT id, created_at, name, level, contact, phone, email, website, address, mode, version
 	 FROM schools
-	 WHERE (LOWER(name) = (LOWER($1))) OR $1 =''
-	 AND (LOWER(level)) = (LOWER($2)) OR $2 = ''
+	 WHERE (to_tsvector('simple', name) @@ plainto_tsquery('simple', $1) OR $1 ='')
+	 AND (to_tsvector('simple', level) @@ plainto_tsquery('simple', $2) OR $2 ='')
 	 AND (mode @> $3  OR $3 = '{}')
 
 	 ORDER BY id
